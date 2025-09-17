@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced SQL Assignment Tutor</title>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --light-bg: #f8f9fa;
+            --container-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --code-bg: #e9ecef;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px 40px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+
+        /* Views */
+        #topic-selection-view, #practice-view {
+            display: none;
+        }
+
+        /* Topic Selection */
+        #topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .topic-card {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--container-bg);
+        }
+
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Practice View */
+        .practice-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .task-description {
+            font-size: 1.3em;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        #user-query-area {
+            width: 100%;
+            height: 150px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1.05em;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        
+        #check-feedback {
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+            margin-top: 10px;
+        }
+        
+        #check-feedback.correct { background-color: #d1e7dd; color: var(--success-color); border: 1px solid var(--success-color); }
+        #check-feedback.incorrect { background-color: #fff3cd; color: #664d03; border: 1px solid var(--warning-color); }
+
+        .reveal-content {
+            display: none;
+            margin-top: 15px;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: "Courier New", Courier, monospace;
+            border: 1px solid #ced4da;
+            font-size: 1.05em;
+        }
+
+        .explanation, .key-concepts {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+        .explanation { background-color: #e9f5ff; }
+        .key-concepts { background-color: #f0f8ff; }
+        
+        .key-concepts ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        .navigation-controls, .action-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            color: white;
+        }
+        
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-success { background-color: var(--success-color); }
+        .btn-secondary { background-color: var(--secondary-color); }
+        .btn-info { background-color: #5bc0de; }
+        
+        #back-to-topics-btn {
+            display: block;
+            margin: 25px auto 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <div id="topic-selection-view">
+            <h1>SQL Practice Topics 📚</h1>
+            <div id="topic-grid"></div>
+        </div>
+
+        <div id="practice-view">
+            <h2 id="topic-title"></h2>
+            
+            <div class="practice-card">
+                <button id="toggle-concepts-btn" class="btn btn-info">Read Key Concepts</button>
+                <div id="concepts-content" class="reveal-content">
+                    <h3>Key Concepts:</h3>
+                    <div class="key-concepts" id="concepts-text"></div>
+                </div>
+            </div>
+
+            <div class="practice-card">
+                <p id="question-counter" style="text-align:center; font-weight:bold;"></p>
+                <h3>Schema:</h3>
+                <pre id="schema-display"></pre>
+                <p class="task-description" id="task-description"></p>
+                
+                <label for="user-query-area"><strong>Your SQL Code:</strong></label>
+                <textarea id="user-query-area" placeholder="Write your SQL query here..."></textarea>
+                <button id="check-code-btn" class="btn btn-success" style="width:100%;">Check My Code</button>
+                <div id="check-feedback"></div>
+
+                <div class="action-buttons">
+                    <button id="reveal-answer-btn" class="btn btn-primary">Show Correct Answer</button>
+                </div>
+                
+                <div id="answer-content" class="reveal-content">
+                    <h3>Correct Query:</h3>
+                    <pre id="query-code"></pre>
+                    <h3>Explanation:</h3>
+                    <div class="explanation" id="explanation-text"></div>
+                </div>
+            </div>
+
+            <div class="navigation-controls">
+                <button id="prev-btn" class="btn btn-secondary">Previous</button>
+                <button id="next-btn" class="btn btn-secondary">Next</button>
+            </div>
+            <button id="back-to-topics-btn" class="btn btn-primary">Back to Topics</button>
+        </div>
+
+    </div>
+
+    <script>
+        const learningData = [
+            {
+                topic: "Set 1: Joins (Basic)",
+                schema: "- students(student_id, name, course_id)\n- courses(course_id, course_name)",
+                concepts: ["..."], // Kept short for brevity, full concepts are in the code
+                questions: [
+                    { 
+                        task: "1. Write a query using an INNER JOIN to display all students along with their course names.", 
+                        query: "SELECT s.student_id, s.name, c.course_name\nFROM students s\nINNER JOIN courses c ON s.course_id = c.course_id;", 
+                        explanation: "An INNER JOIN returns only the rows where the join condition is met in both tables. Here, it retrieves students who are enrolled in a course, matching `students.course_id` with `courses.course_id`." 
+                    },
+                    { 
+                        task: "2. Write a query using a LEFT JOIN to display all students and their course names, including students who have not enrolled in any course.", 
+                        query: "SELECT s.student_id, s.name, c.course_name\nFROM students s\nLEFT JOIN courses c ON s.course_id = c.course_id;", 
+                        explanation: "A LEFT JOIN returns all rows from the left table (students) and the matched rows from the right table (courses). If a student is not enrolled in a course, the `course_name` will appear as NULL." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 2: Aggregation & Group By",
+                schema: "- orders(order_id, customer_id, order_date, total_amount)\n- customers(customer_id, customer_name, city)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to display the total amount spent by each customer.", 
+                        query: "SELECT c.customer_id, c.customer_name, SUM(o.total_amount) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.customer_name;", 
+                        explanation: "`SUM()` is an aggregate function that calculates the total. `GROUP BY` is used to group rows that have the same values in specified columns into summary rows. Here, we sum the `total_amount` for each unique customer." 
+                    },
+                    { 
+                        task: "2. Write a query to find the city with the highest number of customers.", 
+                        query: "SELECT city, COUNT(customer_id) AS total_customers\nFROM customers\nGROUP BY city\nORDER BY total_customers DESC\nLIMIT 1;", 
+                        explanation: "This query first groups customers by `city` and counts them using `COUNT()`. Then, `ORDER BY ... DESC` sorts the cities from the highest customer count to the lowest. Finally, `LIMIT 1` retrieves only the top row." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 3: Subqueries",
+                schema: "- employees(emp_id, emp_name, dept_id, salary)\n- departments(dept_id, dept_name)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to find the employees who earn more than the average salary of all employees.", 
+                        query: "SELECT emp_id, emp_name, salary\nFROM employees\nWHERE salary > (SELECT AVG(salary) FROM employees);", 
+                        explanation: "A subquery (or inner query) is a query nested inside another query. Here, the subquery `(SELECT AVG(salary) FROM employees)` calculates the average salary first. The outer query then uses this result to filter for employees whose salary is greater than that average." 
+                    },
+                    { 
+                        task: "2. Write a query to display the department name of the highest paid employee.", 
+                        query: "SELECT d.dept_name\nFROM employees e\nJOIN departments d ON e.dept_id = d.dept_id\nWHERE e.salary = (SELECT MAX(salary) FROM employees);", 
+                        explanation: "The subquery `(SELECT MAX(salary) FROM employees)` finds the highest salary. The outer query then finds the employee(s) with that exact salary and joins with the departments table to retrieve their department's name." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 4: Window Functions",
+                schema: "- sales(sale_id, product_id, sale_date, amount)\n- products(product_id, product_name, category)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to display each product’s total sales and also the rank of each product based on total sales.", 
+                        query: "SELECT p.product_id, p.product_name, SUM(s.amount) AS total_sales,\n       RANK() OVER (ORDER BY SUM(s.amount) DESC) AS sales_rank\nFROM products p\nJOIN sales s ON p.product_id = s.product_id\nGROUP BY p.product_id, p.product_name;", 
+                        explanation: "`RANK()` is a window function. The `OVER` clause with `ORDER BY SUM(s.amount) DESC` tells it to rank the aggregated sales from highest to lowest." 
+                    },
+                    { 
+                        task: "2. Write a query to find the running total of sales for each product ordered by sale_date.", 
+                        query: "SELECT product_id, sale_date, amount,\n       SUM(amount) OVER (PARTITION BY product_id ORDER BY sale_date) AS running_total\nFROM sales;", 
+                        explanation: "`PARTITION BY product_id` divides the data into groups for each product. The `SUM()` window function then calculates the cumulative sum for each sale within its group, resetting for each new product." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 5: Constraints & Keys",
+                schema: "- users(user_id, username, email UNIQUE, created_at)\n- posts(post_id, user_id, post_title, post_date)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to create the users table with PRIMARY KEY and email as UNIQUE.", 
+                        query: "CREATE TABLE users (\n  user_id INT PRIMARY KEY,\n  username VARCHAR(100),\n  email VARCHAR(100) UNIQUE,\n  created_at DATETIME\n);", 
+                        explanation: "`PRIMARY KEY` uniquely identifies each record and cannot be null. `UNIQUE` ensures that all values in a column are different from one another." 
+                    },
+                    { 
+                        task: "2. Write a query to display all users along with the count of posts they created (use GROUP BY).", 
+                        query: "SELECT u.user_id, u.username, COUNT(p.post_id) AS total_posts\nFROM users u\nLEFT JOIN posts p ON u.user_id = p.user_id\nGROUP BY u.user_id, u.username;", 
+                        explanation: "A `LEFT JOIN` includes all users, even those with no posts. `COUNT(p.post_id)` correctly counts zero for users with no posts because it only counts non-NULL values." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 6: String & Date Functions",
+                schema: "- students(student_id, name, dob, email)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to display each student’s age (use DATEDIFF or TIMESTAMPDIFF).", 
+                        query: "SELECT student_id, name,\n       TIMESTAMPDIFF(YEAR, dob, CURDATE()) AS age\nFROM students;", 
+                        explanation: "`TIMESTAMPDIFF(YEAR, start_date, end_date)` calculates the full years between two dates. `CURDATE()` provides the current date to calculate the current age." 
+                    },
+                    { 
+                        task: "2. Write a query to extract the domain name from email (e.g., gmail.com).", 
+                        query: "SELECT student_id, name,\n       SUBSTRING_INDEX(email, '@', -1) AS domain\nFROM students;", 
+                        explanation: "`SUBSTRING_INDEX(string, delimiter, count)` with a count of -1 returns everything *after* the final delimiter. Here, it extracts the part of the email after the '@' symbol." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 7: Advanced Joins",
+                schema: "- employees(emp_id, emp_name, manager_id, dept_id)\n- departments(dept_id, dept_name)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to display each employee’s manager name using a SELF JOIN.", 
+                        query: "SELECT e.emp_id, e.emp_name, m.emp_name AS manager_name\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id;", 
+                        explanation: "A SELF JOIN joins a table to itself. We use aliases (`e` for employee, `m` for manager) to treat it as two tables, matching an employee's `manager_id` to their manager's `emp_id`." 
+                    },
+                    { 
+                        task: "2. Write a query to display all departments and the number of employees in each department (use RIGHT JOIN).", 
+                        query: "SELECT d.dept_id, d.dept_name, COUNT(e.emp_id) AS total_employees\nFROM employees e\nRIGHT JOIN departments d ON d.dept_id = e.dept_id\nGROUP BY d.dept_id, d.dept_name;", 
+                        explanation: "A `RIGHT JOIN` returns all rows from the right table (departments), ensuring that even departments with zero employees are included in the result." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 8: Transactions & ACID",
+                schema: "- accounts(account_id, customer_name, balance)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write SQL commands to start a transaction, transfer ₹500 from account_id=1 to account_id=2, and then commit the transaction.", 
+                        query: "START TRANSACTION;\nUPDATE accounts SET balance = balance - 500 WHERE account_id = 1;\nUPDATE accounts SET balance = balance + 500 WHERE account_id = 2;\nCOMMIT;", 
+                        explanation: "A transaction bundles operations into an 'all-or-nothing' unit. `START TRANSACTION` begins the process. If both updates succeed, `COMMIT` makes them permanent. If anything fails, the database would automatically roll back." 
+                    },
+                    { 
+                        task: "2. Write SQL commands to demonstrate a ROLLBACK after updating a balance.", 
+                        query: "START TRANSACTION;\nUPDATE accounts SET balance = balance - 1000 WHERE account_id = 1;\nROLLBACK;", 
+                        explanation: "`ROLLBACK` undoes all changes made since the start of the transaction. The `UPDATE` is discarded, and the balance remains unchanged." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 9: Indexing & Performance",
+                schema: "- orders(order_id, customer_id, order_date, total_amount)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to create an index on order_date.", 
+                        query: "CREATE INDEX idx_order_date ON orders(order_date);", 
+                        explanation: "An index is a special data structure that allows the database to find rows with specific values quickly without scanning the entire table, significantly improving query performance." 
+                    },
+                    { 
+                        task: "2. Write a query to explain how the index improves query performance by checking the execution plan.", 
+                        query: "EXPLAIN SELECT * FROM orders WHERE order_date > '2025-01-01';", 
+                        explanation: "`EXPLAIN` shows the query execution plan. With an index, it will show it can use 'idx_order_date' to quickly find the relevant rows (a 'range' scan), which is much faster than a full 'table' scan." 
+                    }
+                ]
+            },
+            {
+                topic: "Set 10: Complex Query Challenge",
+                schema: "- orders(order_id, customer_id, order_date, amount)\n- customers(customer_id, customer_name, city)\n- products(product_id, product_name, price)\n- order_items(order_id, product_id, quantity)",
+                concepts: ["..."],
+                questions: [
+                    { 
+                        task: "1. Write a query to display the top 3 customers who spent the most in the last 6 months.", 
+                        query: "SELECT c.customer_id, c.customer_name, SUM(o.amount) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)\nGROUP BY c.customer_id, c.customer_name\nORDER BY total_spent DESC\nLIMIT 3;", 
+                        explanation: "This query combines a date filter (`DATE_SUB`), a join, aggregation (`SUM`), grouping, sorting (`ORDER BY DESC`), and limiting the result (`LIMIT 3`) to find the top spenders." 
+                    },
+                    { 
+                        task: "2. Write a query to display the most sold product by quantity.", 
+                        query: "SELECT p.product_id, p.product_name, SUM(oi.quantity) AS total_quantity\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.product_id, p.product_name\nORDER BY total_quantity DESC\nLIMIT 1;", 
+                        explanation: "This query joins products with order items, groups by product to sum the total quantity sold, then sorts in descending order and picks the top one with `LIMIT 1`." 
+                    }
+                ]
+            }
+        ];
+        
+        // --- Full concepts data (to avoid clutter above) ---
+        learningData[0].concepts = [
+            "**Purpose**: Joins are used to combine rows from two or more tables based on a related column between them.",
+            "**INNER JOIN**: Returns records that have matching values in both tables. This is the most common type of join.",
+            "**LEFT JOIN (or LEFT OUTER JOIN)**: Returns all records from the left table, and the matched records from the right table. The result is NULL from the right side if there is no match.",
+            "**RIGHT JOIN (or RIGHT OUTER JOIN)**: Returns all records from the right table, and the matched records from the left table. The result is NULL from the left side if there is no match.",
+            "**FULL OUTER JOIN**: Returns all records when there is a match in either the left or right table. (Note: MySQL does not support FULL OUTER JOIN directly; it's simulated with a UNION of LEFT and RIGHT JOINs)."
+        ];
+         learningData[1].concepts = [
+            "**Aggregate Functions**: These functions perform a calculation on a set of values and return a single value. Common functions are `COUNT()`, `SUM()`, `AVG()`, `MAX()`, and `MIN()`.",
+            "**GROUP BY Clause**: This clause is used with aggregate functions to group rows that have the same values in specified columns into summary rows.",
+            "**HAVING Clause**: Used to filter groups based on the results of aggregate functions. `WHERE` filters rows *before* aggregation, while `HAVING` filters groups *after* aggregation.",
+            "**Order of Execution**: In a query, the clauses are logically processed in this order: `FROM` -> `WHERE` -> `GROUP BY` -> `HAVING` -> `SELECT` -> `ORDER BY` -> `LIMIT`."
+        ];
+         learningData[2].concepts = [
+            "**Definition**: A subquery, or inner query, is a `SELECT` statement nested inside another SQL statement (like `SELECT`, `INSERT`, `UPDATE`, or `DELETE`, or inside another subquery).",
+            "**Scalar Subquery**: A subquery that returns a single value (one row, one column). It can be used anywhere a single value is expected.",
+            "**Multi-row Subquery**: A subquery that returns a set of rows. It is often used with operators like `IN`, `NOT IN`, `ANY`, and `ALL`.",
+            "**Correlated Subquery**: An inner query that depends on the outer query for its values. It is evaluated once for each row processed by the outer query, which can be inefficient if not used carefully."
+        ];
+         learningData[3].concepts = [
+            "**Definition**: A window function performs a calculation across a set of table rows that are somehow related to the current row. Unlike aggregate functions, it does not collapse rows; it returns a value for every row.",
+            "**OVER() Clause**: This clause is mandatory for window functions and defines the 'window' or set of rows to operate on. It has three parts: `PARTITION BY`, `ORDER BY`, and `ROWS/RANGE`.",
+            "**PARTITION BY**: Divides the rows into partitions (groups). The window function is applied independently to each partition.",
+            "**Common Functions**: `RANK()`, `DENSE_RANK()`, `ROW_NUMBER()` for ranking; `LEAD()`, `LAG()` for accessing subsequent/previous rows; and aggregate functions like `SUM()`, `AVG()`, `COUNT()` used as window functions."
+        ];
+         learningData[4].concepts = [
+            "**Constraints**: Rules enforced on data columns to ensure the accuracy and reliability of the data. Examples include `NOT NULL`, `UNIQUE`, `DEFAULT`, `CHECK`.",
+            "**Primary Key**: A constraint that uniquely identifies each record in a table. It must contain `UNIQUE` values and cannot contain `NULL` values. A table can have only one primary key.",
+            "**Foreign Key**: A key used to link two tables together. It is a field (or collection of fields) in one table that refers to the `PRIMARY KEY` in another table.",
+            "**Referential Integrity**: This concept, enforced by foreign keys, ensures that relationships between tables remain consistent. For example, you cannot delete a customer if they still have orders in the orders table."
+        ];
+         learningData[5].concepts = [
+            "**Purpose**: SQL provides a rich set of built-in functions to perform operations on string and date/time data.",
+            "**Common String Functions**: `CONCAT()`, `LENGTH()`, `UPPER()`, `LOWER()`, `SUBSTRING()`, `REPLACE()`, `TRIM()`.",
+            "**Common Date/Time Functions**: `NOW()`, `CURDATE()`, `CURTIME()` to get current timestamps; `DATE_FORMAT()` to format dates; `DATEDIFF()`, `TIMESTAMPDIFF()` to calculate intervals; `DATE_ADD()`, `DATE_SUB()` to add/subtract from dates.",
+            "**Type Casting**: Be aware of data types. Sometimes you may need to explicitly cast strings to dates or numbers to use these functions correctly, although SQL often does this implicitly."
+        ];
+         learningData[6].concepts = [
+            "**SELF JOIN**: A regular join, but the table is joined with itself. This is useful for querying hierarchical data (e.g., employees and their managers) stored in a single table. Table aliases are mandatory.",
+            "**CROSS JOIN**: Returns the Cartesian product of the two tables – every row from the first table is combined with every row from the second table. Use with caution as it can produce very large result sets.",
+            "**NATURAL JOIN**: An implicit join based on all columns in both tables that have the same name. It can be risky if tables have unintentionally identically named columns."
+        ];
+         learningData[7].concepts = [
+            "**Transaction**: A sequence of operations performed as a single logical unit of work. All operations in a transaction must succeed; otherwise, the entire transaction is rolled back.",
+            "**ACID Properties**: A set of properties that guarantee database transactions are processed reliably: **A**tomicity (all or nothing), **C**onsistency (database stays in a valid state), **I**solation (concurrent transactions don't interfere), **D**urability (committed changes are permanent).",
+            "**Key Commands**: `START TRANSACTION` begins a transaction. `COMMIT` saves the changes. `ROLLBACK` undoes the changes. `SAVEPOINT` sets an intermediate point to which you can roll back."
+        ];
+         learningData[8].concepts = [
+            "**Index**: A special lookup table that the database search engine can use to speed up data retrieval. An index is a pointer to data in a table.",
+            "**How it Works**: An index works like an index in the back of a book. Instead of scanning the whole book (table), the database looks at the index to find the location of the data quickly.",
+            "**Trade-offs**: Indexes speed up `SELECT` queries and `WHERE` clauses, but they slow down data modification (`INSERT`, `UPDATE`, `DELETE`) because the index also needs to be updated.",
+            "**EXPLAIN**: The `EXPLAIN` command is a powerful tool to see the execution plan of a query. It shows whether indexes are being used and helps identify performance bottlenecks."
+        ];
+         learningData[9].concepts = [
+            "**Combining Clauses**: Complex queries often require combining multiple SQL clauses in the correct logical order (`JOIN`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `LIMIT`).",
+            "**Problem Decomposition**: Break down a complex problem into smaller, logical steps. For example: 1. Filter the initial data. 2. Join the necessary tables. 3. Aggregate the results. 4. Order and limit the final output.",
+            "**Function Mastery**: Effective use of date functions (`DATE_SUB`), aggregate functions (`SUM`, `COUNT`), and subqueries is often necessary to solve complex problems.",
+            "**Readability**: Use aliases and consistent formatting to make complex queries easier to read, understand, and debug."
+        ];
+
+        // --- DOM Elements ---
+        const topicSelectionView = document.getElementById('topic-selection-view');
+        const practiceView = document.getElementById('practice-view');
+        const topicGrid = document.getElementById('topic-grid');
+        const topicTitleEl = document.getElementById('topic-title');
+        const schemaDisplayEl = document.getElementById('schema-display');
+        const questionCounterEl = document.getElementById('question-counter');
+        const taskDescEl = document.getElementById('task-description');
+        const conceptsTextEl = document.getElementById('concepts-text');
+        const userQueryArea = document.getElementById('user-query-area');
+        const checkFeedbackEl = document.getElementById('check-feedback');
+        const queryCodeEl = document.getElementById('query-code');
+        const explanationTextEl = document.getElementById('explanation-text');
+        
+        // --- State ---
+        let currentTopicIndex = 0;
+        let currentQuestionIndex = 0;
+        
+        // --- Functions ---
+        function showView(viewName) {
+            topicSelectionView.style.display = 'none';
+            practiceView.style.display = 'none';
+            document.getElementById(viewName).style.display = 'block';
+        }
+        
+        function normalizeQuery(query) {
+            return query
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .replace(/\s*as\s/g, ' ')
+                .trim()
+                .replace(/;$/, '');
+        }
+
+        function checkUserCode() {
+            const userQuery = userQueryArea.value;
+            const correctQuery = learningData[currentTopicIndex].questions[currentQuestionIndex].query;
+
+            const normalizedUser = normalizeQuery(userQuery);
+            const normalizedCorrect = normalizeQuery(correctQuery);
+            
+            checkFeedbackEl.style.display = 'block';
+            if (normalizedUser === normalizedCorrect) {
+                checkFeedbackEl.textContent = '✅ Correct! The queries match.';
+                checkFeedbackEl.className = 'correct';
+            } else {
+                checkFeedbackEl.textContent = '💡 Not quite a match. Try refining your query or check the correct answer for guidance.';
+                checkFeedbackEl.className = 'incorrect';
+            }
+        }
+
+        function loadQuestion() {
+            const topic = learningData[currentTopicIndex];
+            const question = topic.questions[currentQuestionIndex];
+
+            // Reset UI
+            document.getElementById('concepts-content').style.display = 'none';
+            document.getElementById('answer-content').style.display = 'none';
+            checkFeedbackEl.style.display = 'none';
+            userQueryArea.value = '';
+
+            // Populate content
+            topicTitleEl.textContent = topic.topic;
+            schemaDisplayEl.textContent = topic.schema;
+            conceptsTextEl.innerHTML = `<ul>${topic.concepts.map(c => `<li>${c}</li>`).join('')}</ul>`;
+            questionCounterEl.textContent = `Question ${currentQuestionIndex + 1} of ${topic.questions.length}`;
+            taskDescEl.textContent = question.task;
+            queryCodeEl.textContent = question.query;
+            explanationTextEl.textContent = question.explanation;
+
+            // Update button visibility
+            document.getElementById('prev-btn').style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+            document.getElementById('next-btn').style.visibility = currentQuestionIndex === topic.questions.length - 1 ? 'hidden' : 'visible';
+        }
+        
+        function loadTopics() {
+            topicGrid.innerHTML = '';
+            learningData.forEach((topicData, index) => {
+                const card = document.createElement('div');
+                card.className = 'topic-card';
+                card.textContent = topicData.topic;
+                card.dataset.index = index;
+                card.addEventListener('click', () => {
+                    currentTopicIndex = index;
+                    currentQuestionIndex = 0;
+                    loadQuestion();
+                    showView('practice-view');
+                });
+                topicGrid.appendChild(card);
+            });
+            showView('topic-selection-view');
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('toggle-concepts-btn').addEventListener('click', (e) => {
+            const content = document.getElementById('concepts-content');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        });
+        document.getElementById('check-code-btn').addEventListener('click', checkUserCode);
+        document.getElementById('reveal-answer-btn').addEventListener('click', (e) => {
+            const content = document.getElementById('answer-content');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        });
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentQuestionIndex < learningData[currentTopicIndex].questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
+        });
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        });
+        document.getElementById('back-to-topics-btn').addEventListener('click', loadTopics);
+
+        // --- Initial Load ---
+        loadTopics();
+    </script>
+</body>
+</html>
